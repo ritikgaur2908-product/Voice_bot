@@ -21,6 +21,48 @@ export function getGoogleAuthClient() {
   if (cachedAuth) return cachedAuth;
   if (isMock) return null;
 
+  // 1. Try environment variable loading first (production)
+  const envCreds = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  const envTokens = process.env.GOOGLE_TOKENS_JSON;
+
+  if (envCreds) {
+    try {
+      const creds = JSON.parse(envCreds);
+      if (creds.installed || creds.web) {
+        if (!envTokens) {
+          console.warn("[Google Auth] OAuth credentials found in env, but GOOGLE_TOKENS_JSON is missing. Running in MOCK mode.");
+          isMock = true;
+          return null;
+        }
+        const clientType = creds.installed ? 'installed' : 'web';
+        const { client_id, client_secret, redirect_uris } = creds[clientType];
+        const redirectUri = redirect_uris[0] || 'http://localhost';
+        const oauth2Client = new google.auth.OAuth2(client_id, client_secret, redirectUri);
+        oauth2Client.setCredentials(JSON.parse(envTokens));
+        oauth2Client.on('tokens', (newTokens) => {
+          console.error('[Google Auth] Refreshing OAuth tokens...');
+          oauth2Client.setCredentials(newTokens);
+        });
+        cachedAuth = oauth2Client;
+        return oauth2Client;
+      } else if (creds.client_email && creds.private_key) {
+        const auth = new google.auth.GoogleAuth({
+          credentials: creds,
+          scopes: [
+            'https://www.googleapis.com/auth/calendar',
+            'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/gmail.compose'
+          ],
+        });
+        cachedAuth = auth;
+        return auth;
+      }
+    } catch (e: any) {
+      console.error("[Google Auth] Failed to parse credentials from env:", e.message || e);
+    }
+  }
+
+  // 2. Fallback to local files
   if (!fs.existsSync(credentialsPath)) {
     console.warn(`[Google Auth] Credentials file not found at ${credentialsPath}. Running in MOCK mode.`);
     isMock = true;
