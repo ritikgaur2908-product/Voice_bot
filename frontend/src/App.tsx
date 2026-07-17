@@ -12,7 +12,7 @@ interface Message {
 
 
 
-const rawBackendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const rawBackendUrl = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '');
 const forceSecure = typeof window !== 'undefined' && window.location.protocol === 'https:' && !rawBackendUrl.includes('localhost');
 
 const httpBackendUrl = (() => {
