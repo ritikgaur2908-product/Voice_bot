@@ -13,15 +13,26 @@ interface Message {
 
 
 const rawBackendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-const httpBackendUrl = rawBackendUrl.startsWith('ws')
-  ? rawBackendUrl.replace(/^ws/, 'http')
-  : rawBackendUrl;
+const forceSecure = typeof window !== 'undefined' && window.location.protocol === 'https:' && !rawBackendUrl.includes('localhost');
+
+const httpBackendUrl = (() => {
+  let url = rawBackendUrl.startsWith('ws')
+    ? rawBackendUrl.replace(/^ws/, 'http')
+    : rawBackendUrl;
+  if (forceSecure && url.startsWith('http://')) {
+    url = url.replace(/^http:\/\//, 'https://');
+  }
+  return url;
+})();
 
 const wsBackendUrl = (() => {
   if (rawBackendUrl.startsWith('ws://') || rawBackendUrl.startsWith('wss://')) {
+    if (forceSecure && rawBackendUrl.startsWith('ws://')) {
+      return rawBackendUrl.replace(/^ws:\/\//, 'wss://');
+    }
     return rawBackendUrl;
   }
-  const wsProtocol = rawBackendUrl.startsWith('https') ? 'wss' : 'ws';
+  const wsProtocol = (rawBackendUrl.startsWith('https') || forceSecure) ? 'wss' : 'ws';
   const wsHost = rawBackendUrl.replace(/^https?:\/\//, '');
   return `${wsProtocol}://${wsHost}`;
 })();
