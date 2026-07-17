@@ -1,0 +1,1442 @@
+# Problem Statement
+
+## Project Title
+
+**AI Voice Agent – Advisor Appointment Scheduler**
+
+---
+
+# 1. Project Overview
+
+Build an AI-powered voice assistant that helps users schedule a **tentative appointment with a human advisor** in a compliant and secure manner.
+
+The assistant should conduct a natural voice conversation, understand the user's intent, collect only the minimum information required for scheduling, interact with backend systems through MCP (Model Context Protocol), and complete the pre-booking workflow without collecting any personally identifiable information (PII).
+
+The objective of the project is **not** to provide financial or investment advice. Instead, the agent should only facilitate scheduling and administrative tasks while following compliance rules.
+
+This project evaluates:
+
+* Voice conversation quality
+* Intent recognition
+* Conversation flow management
+* Calendar orchestration
+* MCP tool usage
+* Compliance enforcement
+* Safe AI behavior
+* Error handling
+* User experience
+
+---
+
+# 2. Business Objective
+
+Organizations offering advisor consultations receive numerous requests for appointments.
+
+Scheduling currently requires manual effort.
+
+The AI voice assistant should automate the initial scheduling process by:
+
+* understanding why the user wants to speak to an advisor
+* finding available appointment slots
+* reserving a tentative slot
+* generating a booking reference
+* updating internal systems
+* drafting communication for human approval
+
+The booking remains **tentative** until the user later provides contact details through a secure external webpage.
+
+---
+
+# 3. Functional Requirements
+
+The system shall support the following capabilities.
+
+## 3.1 Greeting
+
+The assistant should begin every conversation by greeting the caller.
+
+Example:
+
+> Hello. Welcome to the Advisor Appointment Scheduler.
+
+---
+
+## 3.2 Mandatory Disclaimer
+
+Immediately after greeting, the assistant must clearly communicate:
+
+* This service is only for appointment scheduling.
+* The assistant does not provide investment advice.
+* No personal information should be shared during the call.
+
+Example:
+
+> This assistant helps schedule advisor appointments only. It does not provide investment advice. Please do not share personal information such as your phone number, email address, PAN, Aadhaar, account number, or any sensitive financial information during this call.
+
+The disclaimer must always be spoken before proceeding.
+
+---
+
+# 4. Supported User Intents
+
+The assistant must recognize the following primary intents.
+
+## Intent 1
+
+Book a new appointment
+
+Examples:
+
+* I want to speak with an advisor.
+* Book a consultation.
+* Schedule a meeting.
+
+---
+
+## Intent 2
+
+Reschedule an appointment
+
+Examples:
+
+* Change my booking.
+* Move my appointment.
+* Can I reschedule?
+
+---
+
+## Intent 3
+
+Cancel an appointment
+
+Examples:
+
+* Cancel my appointment.
+* I no longer need the consultation.
+
+---
+
+## Intent 4
+
+Check preparation requirements
+
+Examples:
+
+* What should I prepare?
+* What documents should I keep ready?
+* What should I know before the meeting?
+
+---
+
+## Intent 5
+
+Check advisor availability
+
+Examples:
+
+* Are there appointments tomorrow?
+* When is the next available slot?
+* What are the available windows?
+
+---
+
+# 5. Supported Consultation Topics
+
+The assistant must ask the user to select one consultation topic.
+
+Only the following predefined topics are allowed.
+
+* KYC / Onboarding
+* SIP / Mandates
+* Statements / Tax Documents
+* Withdrawals & Timelines
+* Account Changes / Nominee
+
+If the user mentions something similar, the assistant should intelligently map it to the nearest supported topic.
+
+Example
+
+"My nominee needs updating"
+
+↓
+
+Account Changes / Nominee
+
+---
+
+# 6. Conversation Flow
+
+The complete conversation should follow this sequence.
+
+```
+Greeting
+
+↓
+
+Compliance Disclaimer
+
+↓
+
+Determine User Intent
+
+↓
+
+Collect Consultation Topic
+
+↓
+
+Collect Preferred Day
+
+↓
+
+Collect Preferred Time
+
+↓
+
+Search Available Slots
+
+↓
+
+Offer Two Available Slots
+
+↓
+
+User Selects One Slot
+
+↓
+
+Repeat Date + Time + IST
+
+↓
+
+Generate Booking Code
+
+↓
+
+Execute MCP Operations
+
+↓
+
+Read Booking Code
+
+↓
+
+Provide Secure Completion Link
+
+↓
+
+End Conversation
+```
+
+---
+
+# 7. Slot Management
+
+The assistant should interact with a mock calendar.
+
+Input:
+
+Preferred day
+
+Preferred time
+
+Output:
+
+Exactly two available appointment slots.
+
+Example
+
+User:
+
+Tomorrow afternoon
+
+Assistant:
+
+I found two available slots.
+
+* Tuesday, 2:00 PM IST
+* Tuesday, 4:30 PM IST
+
+Which would you prefer?
+
+---
+
+# 8. Confirmation Step
+
+Before finalizing the booking, the assistant must repeat:
+
+* consultation topic
+* appointment date
+* appointment time
+* timezone (IST)
+
+Example
+
+You are booking an advisor consultation for **SIP/Mandates** on **Tuesday, July 8 at 2:00 PM IST**.
+
+Should I confirm this tentative booking?
+
+---
+
+# 9. Booking Code Generation
+
+After confirmation, generate a unique booking reference.
+
+Format
+
+```
+AA-XXXX
+
+Example
+
+AA-4837
+
+OR
+
+NL-A742
+```
+
+Requirements
+
+* unique
+* human readable
+* uppercase letters
+* short
+
+---
+
+# 10. MCP Integrations
+
+After confirmation, execute three backend actions.
+
+---
+
+## MCP Action 1
+
+Calendar Hold
+
+Create a tentative calendar event.
+
+Title format
+
+```
+Advisor Q&A — {Topic} — {Booking Code}
+```
+
+Example
+
+```
+Advisor Q&A — Withdrawals — AA-4837
+```
+
+Store
+
+* topic
+* date
+* time
+* booking code
+
+Status
+
+Tentative
+
+---
+
+## MCP Action 2
+
+Notes Entry
+
+Append a record to
+
+```
+Advisor Pre-Bookings
+```
+
+Fields
+
+```
+Date
+
+Time
+
+Topic
+
+Booking Code
+
+Status
+
+Timestamp
+```
+
+---
+
+## MCP Action 3
+
+Draft Email
+
+Prepare an advisor email.
+
+The email must **NOT** be automatically sent.
+
+Instead,
+
+Status
+
+```
+Draft
+
+Pending Approval
+```
+
+Include
+
+* booking code
+* topic
+* scheduled slot
+* notes
+
+---
+
+# 11. Secure Link
+
+After successful booking, provide a secure URL where the user can later enter contact details.
+
+Example
+
+```
+https://example.com/complete-booking
+```
+
+The assistant must clearly state:
+
+Do not provide personal information during this call.
+
+Instead, complete your details securely using the provided link.
+
+---
+
+# 12. Rescheduling Flow
+
+The assistant should:
+
+Ask for
+
+* booking code
+
+Do not ask for
+
+* phone number
+* email
+* account number
+
+After identifying the booking,
+
+Repeat
+
+Current appointment
+
+Offer
+
+Two new slots
+
+On confirmation
+
+* update calendar
+* update notes# Problem Statement
+
+## Project Title
+
+**AI Voice Agent – Advisor Appointment Scheduler**
+
+---
+
+# 1. Project Overview
+
+Build an AI-powered voice assistant that helps users schedule a **tentative appointment with a human advisor** in a compliant and secure manner.
+
+The assistant should conduct a natural voice conversation, understand the user's intent, collect only the minimum information required for scheduling, interact with backend systems through MCP (Model Context Protocol), and complete the pre-booking workflow without collecting any personally identifiable information (PII).
+
+The objective of the project is **not** to provide financial or investment advice. Instead, the agent should only facilitate scheduling and administrative tasks while following compliance rules.
+
+This project evaluates:
+
+* Voice conversation quality
+* Intent recognition
+* Conversation flow management
+* Calendar orchestration
+* MCP tool usage
+* Compliance enforcement
+* Safe AI behavior
+* Error handling
+* User experience
+
+---
+
+# 2. Business Objective
+
+Organizations offering advisor consultations receive numerous requests for appointments.
+
+Scheduling currently requires manual effort.
+
+The AI voice assistant should automate the initial scheduling process by:
+
+* understanding why the user wants to speak to an advisor
+* finding available appointment slots
+* reserving a tentative slot
+* generating a booking reference
+* updating internal systems
+* drafting communication for human approval
+
+The booking remains **tentative** until the user later provides contact details through a secure external webpage.
+
+---
+
+# 3. Functional Requirements
+
+The system shall support the following capabilities.
+
+## 3.1 Greeting
+
+The assistant should begin every conversation by greeting the caller.
+
+Example:
+
+> Hello. Welcome to the Advisor Appointment Scheduler.
+
+---
+
+## 3.2 Mandatory Disclaimer
+
+Immediately after greeting, the assistant must clearly communicate:
+
+* This service is only for appointment scheduling.
+* The assistant does not provide investment advice.
+* No personal information should be shared during the call.
+
+Example:
+
+> This assistant helps schedule advisor appointments only. It does not provide investment advice. Please do not share personal information such as your phone number, email address, PAN, Aadhaar, account number, or any sensitive financial information during this call.
+
+The disclaimer must always be spoken before proceeding.
+
+---
+
+# 4. Supported User Intents
+
+The assistant must recognize the following primary intents.
+
+## Intent 1
+
+Book a new appointment
+
+Examples:
+
+* I want to speak with an advisor.
+* Book a consultation.
+* Schedule a meeting.
+
+---
+
+## Intent 2
+
+Reschedule an appointment
+
+Examples:
+
+* Change my booking.
+* Move my appointment.
+* Can I reschedule?
+
+---
+
+## Intent 3
+
+Cancel an appointment
+
+Examples:
+
+* Cancel my appointment.
+* I no longer need the consultation.
+
+---
+
+## Intent 4
+
+Check preparation requirements
+
+Examples:
+
+* What should I prepare?
+* What documents should I keep ready?
+* What should I know before the meeting?
+
+---
+
+## Intent 5
+
+Check advisor availability
+
+Examples:
+
+* Are there appointments tomorrow?
+* When is the next available slot?
+* What are the available windows?
+
+---
+
+# 5. Supported Consultation Topics
+
+The assistant must ask the user to select one consultation topic.
+
+Only the following predefined topics are allowed.
+
+* KYC / Onboarding
+* SIP / Mandates
+* Statements / Tax Documents
+* Withdrawals & Timelines
+* Account Changes / Nominee
+
+If the user mentions something similar, the assistant should intelligently map it to the nearest supported topic.
+
+Example
+
+"My nominee needs updating"
+
+↓
+
+Account Changes / Nominee
+
+---
+
+# 6. Conversation Flow
+
+The complete conversation should follow this sequence.
+
+```
+Greeting
+
+↓
+
+Compliance Disclaimer
+
+↓
+
+Determine User Intent
+
+↓
+
+Collect Consultation Topic
+
+↓
+
+Collect Preferred Day
+
+↓
+
+Collect Preferred Time
+
+↓
+
+Search Available Slots
+
+↓
+
+Offer Two Available Slots
+
+↓
+
+User Selects One Slot
+
+↓
+
+Repeat Date + Time + IST
+
+↓
+
+Generate Booking Code
+
+↓
+
+Execute MCP Operations
+
+↓
+
+Read Booking Code
+
+↓
+
+Provide Secure Completion Link
+
+↓
+
+End Conversation
+```
+
+---
+
+# 7. Slot Management
+
+The assistant should interact with a mock calendar.
+
+Input:
+
+Preferred day
+
+Preferred time
+
+Output:
+
+Exactly two available appointment slots.
+
+Example
+
+User:
+
+Tomorrow afternoon
+
+Assistant:
+
+I found two available slots.
+
+* Tuesday, 2:00 PM IST
+* Tuesday, 4:30 PM IST
+
+Which would you prefer?
+
+---
+
+# 8. Confirmation Step
+
+Before finalizing the booking, the assistant must repeat:
+
+* consultation topic
+* appointment date
+* appointment time
+* timezone (IST)
+
+Example
+
+You are booking an advisor consultation for **SIP/Mandates** on **Tuesday, July 8 at 2:00 PM IST**.
+
+Should I confirm this tentative booking?
+
+---
+
+# 9. Booking Code Generation
+
+After confirmation, generate a unique booking reference.
+
+Format
+
+```
+AA-XXXX
+
+Example
+
+AA-4837
+
+OR
+
+NL-A742
+```
+
+Requirements
+
+* unique
+* human readable
+* uppercase letters
+* short
+
+---
+
+# 10. MCP Integrations
+
+After confirmation, execute three backend actions.
+
+---
+
+## MCP Action 1
+
+Calendar Hold
+
+Create a tentative calendar event.
+
+Title format
+
+```
+Advisor Q&A — {Topic} — {Booking Code}
+```
+
+Example
+
+```
+Advisor Q&A — Withdrawals — AA-4837
+```
+
+Store
+
+* topic
+* date
+* time
+* booking code
+
+Status
+
+Tentative
+
+---
+
+## MCP Action 2
+
+Notes Entry
+
+Append a record to
+
+```
+Advisor Pre-Bookings
+```
+
+Fields
+
+```
+Date
+
+Time
+
+Topic
+
+Booking Code
+
+Status
+
+Timestamp
+```
+
+---
+
+## MCP Action 3
+
+Draft Email
+
+Prepare an advisor email.
+
+The email must **NOT** be automatically sent.
+
+Instead,
+
+Status
+
+```
+Draft
+
+Pending Approval
+```
+
+Include
+
+* booking code
+* topic
+* scheduled slot
+* notes
+
+---
+
+# 11. Secure Link
+
+After successful booking, provide a secure URL where the user can later enter contact details.
+
+Example
+
+```
+https://example.com/complete-booking
+```
+
+The assistant must clearly state:
+
+Do not provide personal information during this call.
+
+Instead, complete your details securely using the provided link.
+
+---
+
+# 12. Rescheduling Flow
+
+The assistant should:
+
+Ask for
+
+* booking code
+
+Do not ask for
+
+* phone number
+* email
+* account number
+
+After identifying the booking,
+
+Repeat
+
+Current appointment
+
+Offer
+
+Two new slots
+
+On confirmation
+
+* update calendar
+* update notes
+* update email draft
+
+---
+
+# 13. Cancellation Flow
+
+Ask only for
+
+Booking code
+
+Then
+
+* cancel tentative hold
+* update notes
+* update email draft
+
+Read confirmation back to the user.
+
+---
+
+# 14. Preparation Information
+
+If the user asks what they should prepare, provide only general educational guidance.
+
+Example
+
+For KYC discussions, you may be asked later to provide identification documents through official secure channels.
+
+Do not ask the caller to share those documents during this call.
+
+---
+
+# 15. Availability Inquiry
+
+If the user only wants available times,
+
+The assistant should respond with appointment windows without creating any booking.
+
+Example
+
+Tomorrow:
+
+* Morning
+* Afternoon
+
+Wednesday:
+
+* 11 AM
+* 3 PM
+
+---
+
+# 16. No Matching Slots
+
+If no appointments match the user's requested time,
+
+The assistant should:
+
+Create a waitlist request.
+
+Perform MCP actions:
+
+Calendar
+
+```
+Waitlist Hold
+```
+
+Notes
+
+```
+Waitlist Entry
+```
+
+Draft Email
+
+```
+Notify Advisor of Waitlisted User
+```
+
+Then explain that the advisor team will review availability.
+
+---
+
+# 17. Compliance Requirements
+
+The assistant must never request:
+
+* Name
+* Phone number
+* Email address
+* PAN
+* Aadhaar
+* Account number
+* Customer ID
+* Address
+* Date of Birth
+* Bank details
+* OTP
+* Password
+
+If the user voluntarily provides PII,
+
+The assistant should interrupt politely.
+
+Example
+
+Please don't share personal information during this call. You'll receive a secure link after booking where those details can be submitted safely.
+
+---
+
+# 18. Investment Advice Handling
+
+If the user requests investment advice,
+
+The assistant must refuse politely.
+
+Example
+
+I'm unable to provide investment advice.
+
+I can help schedule an appointment with a qualified advisor or provide general educational resources.
+
+---
+
+# 19. Error Handling
+
+Handle scenarios including:
+
+* unclear speech
+* unsupported topic
+* invalid date
+* invalid time
+* booking code not found
+* MCP failure
+* calendar unavailable
+* duplicate booking
+* user changes mind
+* user interrupts
+
+The assistant should recover gracefully and continue where possible.
+
+---
+
+# 20. Voice Experience Requirements
+
+The assistant should:
+
+* sound conversational
+* avoid robotic repetition
+* confirm important information once
+* keep responses concise
+* maintain context
+* support interruptions
+* clarify ambiguity politely
+
+---
+
+# 21. Non-Functional Requirements
+
+The system should provide:
+
+* Low latency responses
+* Reliable intent recognition
+* Graceful failure recovery
+* Secure backend interactions
+* Modular architecture
+* Easy extensibility
+* Clear logging
+* Session state management
+
+---
+
+# 22. Data Model
+
+Booking
+
+```
+Booking Code
+
+Topic
+
+Date
+
+Time
+
+Timezone
+
+Status
+
+Created Timestamp
+
+Updated Timestamp
+```
+
+Notes
+
+```
+Booking Code
+
+Topic
+
+Appointment Slot
+
+Timestamp
+
+Status
+```
+
+Calendar Event
+
+```
+Title
+
+Date
+
+Time
+
+Status
+
+Booking Code
+```
+
+Email Draft
+
+```
+Subject
+
+Body
+
+Approval Status
+
+Booking Code
+```
+
+---
+
+# 23. Success Criteria
+
+The project is considered successful when the assistant can:
+
+* correctly identify all five supported intents
+* enforce compliance disclaimer
+* avoid collecting PII
+* collect consultation topic
+* collect preferred scheduling window
+* offer two appointment slots
+* confirm booking details including IST
+* generate a unique booking code
+* create a calendar hold
+* append notes through MCP
+* prepare an approval-gated email draft
+* provide a secure completion URL
+* handle unavailable slots via waitlist
+* refuse investment advice appropriately
+* maintain a natural and efficient voice conversation throughout.
+
+---
+
+# 24. Expected Deliverables
+
+The completed solution should include:
+
+* AI voice conversation workflow
+* Intent classification module
+* Conversation state manager
+* Mock calendar service
+* Booking code generator
+* MCP Calendar integration
+* MCP Notes integration
+* MCP Email Draft integration
+* Waitlist workflow
+* Compliance guardrails
+* Error handling logic
+* Logging and monitoring
+* End-to-end demonstration showing successful appointment scheduling.
+
+* update email draft
+
+---
+
+# 13. Cancellation Flow
+
+Ask only for
+
+Booking code
+
+Then
+
+* cancel tentative hold
+* update notes
+* update email draft
+
+Read confirmation back to the user.
+
+---
+
+# 14. Preparation Information
+
+If the user asks what they should prepare, provide only general educational guidance.
+
+Example
+
+For KYC discussions, you may be asked later to provide identification documents through official secure channels.
+
+Do not ask the caller to share those documents during this call.
+
+---
+
+# 15. Availability Inquiry
+
+If the user only wants available times,
+
+The assistant should respond with appointment windows without creating any booking.
+
+Example
+
+Tomorrow:
+
+* Morning
+* Afternoon
+
+Wednesday:
+
+* 11 AM
+* 3 PM
+
+---
+
+# 16. No Matching Slots
+
+If no appointments match the user's requested time,
+
+The assistant should:
+
+Create a waitlist request.
+
+Perform MCP actions:
+
+Calendar
+
+```
+Waitlist Hold
+```
+
+Notes
+
+```
+Waitlist Entry
+```
+
+Draft Email
+
+```
+Notify Advisor of Waitlisted User
+```
+
+Then explain that the advisor team will review availability.
+
+---
+
+# 17. Compliance Requirements
+
+The assistant must never request:
+
+* Name
+* Phone number
+* Email address
+* PAN
+* Aadhaar
+* Account number
+* Customer ID
+* Address
+* Date of Birth
+* Bank details
+* OTP
+* Password
+
+If the user voluntarily provides PII,
+
+The assistant should interrupt politely.
+
+Example
+
+Please don't share personal information during this call. You'll receive a secure link after booking where those details can be submitted safely.
+
+---
+
+# 18. Investment Advice Handling
+
+If the user requests investment advice,
+
+The assistant must refuse politely.
+
+Example
+
+I'm unable to provide investment advice.
+
+I can help schedule an appointment with a qualified advisor or provide general educational resources.
+
+---
+
+# 19. Error Handling
+
+Handle scenarios including:
+
+* unclear speech
+* unsupported topic
+* invalid date
+* invalid time
+* booking code not found
+* MCP failure
+* calendar unavailable
+* duplicate booking
+* user changes mind
+* user interrupts
+
+The assistant should recover gracefully and continue where possible.
+
+---
+
+# 20. Voice Experience Requirements
+
+The assistant should:
+
+* sound conversational
+* avoid robotic repetition
+* confirm important information once
+* keep responses concise
+* maintain context
+* support interruptions
+* clarify ambiguity politely
+
+---
+
+# 21. Non-Functional Requirements
+
+The system should provide:
+
+* Low latency responses
+* Reliable intent recognition
+* Graceful failure recovery
+* Secure backend interactions
+* Modular architecture
+* Easy extensibility
+* Clear logging
+* Session state management
+
+---
+
+# 22. Data Model
+
+Booking
+
+```
+Booking Code
+
+Topic
+
+Date
+
+Time
+
+Timezone
+
+Status
+
+Created Timestamp
+
+Updated Timestamp
+```
+
+Notes
+
+```
+Booking Code
+
+Topic
+
+Appointment Slot
+
+Timestamp
+
+Status
+```
+
+Calendar Event
+
+```
+Title
+
+Date
+
+Time
+
+Status
+
+Booking Code
+```
+
+Email Draft
+
+```
+Subject
+
+Body
+
+Approval Status
+
+Booking Code
+```
+
+---
+
+# 23. Success Criteria
+
+The project is considered successful when the assistant can:
+
+* correctly identify all five supported intents
+* enforce compliance disclaimer
+* avoid collecting PII
+* collect consultation topic
+* collect preferred scheduling window
+* offer two appointment slots
+* confirm booking details including IST
+* generate a unique booking code
+* create a calendar hold
+* append notes through MCP
+* prepare an approval-gated email draft
+* provide a secure completion URL
+* handle unavailable slots via waitlist
+* refuse investment advice appropriately
+* maintain a natural and efficient voice conversation throughout.
+
+---
+
+# 24. Expected Deliverables
+
+The completed solution should include:
+
+* AI voice conversation workflow
+* Intent classification module
+* Conversation state manager
+* Mock calendar service
+* Booking code generator
+* MCP Calendar integration
+* MCP Notes integration
+* MCP Email Draft integration
+* Waitlist workflow
+* Compliance guardrails
+* Error handling logic
+* Logging and monitoring
+* End-to-end demonstration showing successful appointment scheduling.

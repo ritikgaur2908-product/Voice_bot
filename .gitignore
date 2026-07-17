@@ -1,0 +1,26 @@
+# Dependencies and build outputs
+node_modules/
+dist/
+/frontend/dist/
+/voice-agent/dist/
+/mcp-server/dist/
+
+# Secret files
+.env
+.env.local
+**/credentials/*.json
+
+# Database and ledger files
+*.db
+*.db-journal
+**/bookings.db
+**/simulated_ledger.json
+
+# OS/System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
